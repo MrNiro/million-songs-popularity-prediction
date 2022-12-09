@@ -107,7 +107,7 @@ class FeatureEnhanceNLP:
 
 
 if __name__ == '__main__':
-    my_bert_embeddings = FeatureEnhanceNLP("./processed/whole_data.csv")
+    my_bert_embeddings = FeatureEnhanceNLP("../processed/whole_data.csv")
 
     # =================== Parallel Embedding Start ===================
     print("Parallel Embedding Start!")

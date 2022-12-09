@@ -186,7 +186,7 @@ class MusicPopularityPredictor:
 
 
 if __name__ == '__main__':
-    my_music_popularity_predictor = MusicPopularityPredictor("./processed/enhanced_data.csv")
+    my_music_popularity_predictor = MusicPopularityPredictor("../processed/enhanced_data.csv")
     # my_music_popularity_predictor.fit_with_RF(n_jobs=12)
     # my_music_popularity_predictor.fit_with_XGBR(n_jobs=12)
 

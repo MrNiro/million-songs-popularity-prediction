@@ -10,7 +10,7 @@ Just for exploring, testing and enhancing the data.
 
 if __name__ == '__main__':
     # utf-8 encoding will fail
-    df = pd.read_csv("processed/10496.csv", sep=",", encoding="ANSI")
+    df = pd.read_csv("../processed/10496.csv", sep=",", encoding="ANSI")
     df.dropna(axis=0, inplace=True)
     df = df.reset_index(drop=True)
 

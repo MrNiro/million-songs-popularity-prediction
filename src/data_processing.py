@@ -126,8 +126,8 @@ if __name__ == "__main__":
     n_cpu = multiprocessing.cpu_count()
     print("CPU Number on this machine:", n_cpu)
 
-    if not os.path.exists("./processed"):
-        os.mkdir("processed")
+    if not os.path.exists("../processed"):
+        os.mkdir("../processed")
 
     data_path = "millionsongsubset"
 
