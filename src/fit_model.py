@@ -13,6 +13,9 @@ import torch
 import time
 import os
 
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+# os.environ['CUDA_VISIBLE_DEVICES'] = '0, 1'
+
 
 class MusicPopularityPredictor:
     def __init__(self, file_path):
@@ -116,6 +119,8 @@ class MusicPopularityPredictor:
 
         if torch.cuda.is_available():
             fc_network = fc_network.cuda()
+            if len(os.environ['CUDA_VISIBLE_DEVICES']) > 1:
+                fc_network = torch.nn.DataParallel(fc_network)
 
         for epoch in range(epochs):
             start_time = time.perf_counter()
@@ -141,15 +146,19 @@ class MusicPopularityPredictor:
 
             train_score /= data_num
             epoch_time = time.perf_counter() - start_time
-            to_predict = torch.tensor(self.x_test.to_numpy(), dtype=torch.float32).cuda()
+            to_predict = torch.tensor(self.x_test.to_numpy(), dtype=torch.float32)
+            if torch.cuda.is_available():
+                to_predict = to_predict.cuda()
             prediction = fc_network(to_predict).squeeze(1).cpu().detach().numpy()
             test_score = r2_score(self.y_test, prediction)
             print('\tepoch: {} / {}  Validation Score: {}  Training Score: {}'
                   .format(epoch+1, epochs, test_score, train_score))
             print("\tEpoch time: %.3f s\tEpoch Loss: %f" % (epoch_time, epoch_loss))
             if epoch % 100 == 0:
-                torch.save(fc_network.state_dict(), 'fc_latest_2.pth')
-                # torch.save(fc_network.module.state_dict(), 'fc_latest.pth')
+                if len(os.environ['CUDA_VISIBLE_DEVICES']) > 1:
+                    torch.save(fc_network.module.state_dict(), 'fc_latest.pth')
+                else:
+                    torch.save(fc_network.state_dict(), 'fc_latest_2.pth')
                 print("Model Saved!")
 
     def grid_search_for_RF(self, n_jobs=12):
