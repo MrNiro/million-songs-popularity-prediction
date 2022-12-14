@@ -1,11 +1,16 @@
 # million-songs-popularity-prediction
 
+## Preprocessing
+```bash
+python src/data_processing.py
+python npl_features.csv
+```
+
 ## Training
 - make sure "./processed/enhanced_data.csv" exist
-- go to ./src
-    - ```
-      python fit_model.py
-      ```
+- ```
+  python fit_model.py
+  ```
 
 ## Working on Discovery Cluster
 ```bash

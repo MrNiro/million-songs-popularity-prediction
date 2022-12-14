@@ -31,6 +31,9 @@ class FeatureEnhanceNLP:
         self.terms_columns = None
 
     def embedding_serial(self):
+        """
+        Finish BERT Embedding in serial
+        """
         # get String value from 3 columns
         song_titles = self.df["title"]
         album_names = self.df["album_name"]
@@ -62,7 +65,13 @@ class FeatureEnhanceNLP:
         self.album_names_columns = pd.DataFrame(album_names_embeddings)
         self.terms_columns = pd.DataFrame(terms_embeddings)
 
-    def song_title_embedding(self):
+    def song_title_embedding(self, communicate_dict):
+        """
+        Target function for encoding Song Titles with multiprocessing
+
+        :param communicate_dict: should be created by multiprocessing.Manager
+                                 used for communication between processes
+        """
         song_titles = self.df["title"]
         print("\ttokenization for song titles start!")
         song_titles_tokenization = [torch.tensor(self.base_tokenizer.encode(each)).unsqueeze(0).to(device)
@@ -72,8 +81,15 @@ class FeatureEnhanceNLP:
                                   for t in song_titles_tokenization]
         print("\tembedding for song titles done!")
         self.song_titles_columns = pd.DataFrame(song_titles_embeddings)
+        communicate_dict["song_titles_columns"] = self.song_titles_columns
 
-    def album_name_embedding(self):
+    def album_name_embedding(self, communicate_dict):
+        """
+        Target function for encoding Album Names with multiprocessing
+
+        :param communicate_dict: should be created by multiprocessing.Manager
+                                 used for communication between processes
+        """
         album_names = self.df["album_name"]
         print("\ttokenization for album names start!")
         album_names_tokenization = [torch.tensor(self.base_tokenizer.encode(each)).unsqueeze(0).to(device)
@@ -83,8 +99,15 @@ class FeatureEnhanceNLP:
                                   for t in album_names_tokenization]
         print("\tembedding for album names done!")
         self.album_names_columns = pd.DataFrame(album_names_embeddings)
+        communicate_dict["album_names_columns"] = self.album_names_columns
 
-    def terms_embedding(self):
+    def terms_embedding(self, communicate_dict):
+        """
+        Target function for encoding Terms with multiprocessing
+
+        :param communicate_dict: should be created by multiprocessing.Manager
+                                 used for communication between processes
+        """
         terms = self.df["artist_terms"]
         print("\ttokenization for terms start!")
         terms_tokenization = [torch.tensor(self.similarity_tokenizer.encode(each)).unsqueeze(0).to(device)
@@ -94,28 +117,42 @@ class FeatureEnhanceNLP:
                             for t in terms_tokenization]
         print("\tembedding for terms done!")
         self.terms_columns = pd.DataFrame(terms_embeddings)
+        communicate_dict["terms_columns"] = self.terms_columns
 
-    def generate_features(self):
-        nlp_features = pd.concat((self.song_titles_columns,
-                                  self.album_names_columns,
-                                  self.terms_columns), axis=1)
+    def generate_features(self, return_dict=None):
+        """
+        Save Enhanced data locally
+
+        :param return_dict: should be created by multiprocessing.Manager
+        """
+        if return_dict:
+            nlp_features = pd.concat((return_dict["song_titles_columns"],
+                                      return_dict["album_names_columns"],
+                                      return_dict["terms_columns"]), axis=1)
+        else:
+            nlp_features = pd.concat((self.song_titles_columns,
+                                      self.album_names_columns,
+                                      self.terms_columns), axis=1)
+
         whole_features = pd.concat((self.df, nlp_features), axis=1)
 
-        print(whole_features)
-        whole_features.to_csv("./processed/new_enhanced_data", index=False)
+        # print(whole_features)
+        whole_features.to_csv("./processed/new_enhanced_data.csv", index=False)
         print("Enhanced Data Saved!")
 
 
 if __name__ == '__main__':
-    my_bert_embeddings = FeatureEnhanceNLP("../processed/whole_data.csv")
+    my_bert_embeddings = FeatureEnhanceNLP("./processed/whole_data.csv")
 
     # =================== Parallel Embedding Start ===================
     print("Parallel Embedding Start!")
     start = time.perf_counter()
+    manager = mp.Manager()
+    my_communicate_dict = manager.dict()
     # =================== define 3 different Process ===================
-    song_title_process = mp.Process(target=my_bert_embeddings.song_title_embedding)
-    album_name_process = mp.Process(target=my_bert_embeddings.album_name_embedding)
-    terms_process = mp.Process(target=my_bert_embeddings.terms_embedding)
+    song_title_process = mp.Process(target=my_bert_embeddings.song_title_embedding, args=(my_communicate_dict,))
+    album_name_process = mp.Process(target=my_bert_embeddings.album_name_embedding, args=(my_communicate_dict,))
+    terms_process = mp.Process(target=my_bert_embeddings.terms_embedding, args=(my_communicate_dict,))
 
     # =================== start 3 different Process ===================
     song_title_process.start()

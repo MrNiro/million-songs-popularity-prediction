@@ -58,4 +58,4 @@ if __name__ == '__main__':
             idx += 1
 
     print(df)
-    df.to_csv("./processed/whole_data.csv", index=False, encoding="ANSI")
+    df.to_csv("./processed/test_data.csv", index=False, encoding="ANSI")

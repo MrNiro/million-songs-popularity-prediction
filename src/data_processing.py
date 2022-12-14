@@ -49,7 +49,8 @@ def process_h5_file(h5_file):
     # If song_hotness is NaN, set it as -1
     hotness = get_song_hotttnesss(h5_file)
     if np.isnan(hotness):
-        row.append(-1)
+        # row.append(-1)
+        return []
     else:
         row.append(hotness)
 
@@ -96,11 +97,12 @@ def process_h5_file(h5_file):
 
 def save_row(process_id, row):
     """
-    Save a row into a local CSV
-    - process_id: id of current process, also the name of the csv file
-    - rows: A list of rows which are results of `transform_local`
-    """
+    Save processed results to csv file locally
 
+    :param process_id: id of current process, also the name of the csv file
+    :param row: A row contains processed results
+    :return:
+    """
     save_path = f'processed/{process_id}.csv'
 
     with open(save_path, 'a', encoding='utf-8', newline="") as file:
@@ -116,10 +118,10 @@ def process_h5_file_wrapper(h5_file):
         with tables.open_file(h5_file) as h5:
             row = process_h5_file(h5)
             if len(row) > 0:
+                # get process id as the file name
                 save_row(os.getpid(), row)
     except IndexError or IOError or Exception as e:
-        # print(e)
-        return
+        pass
 
 
 if __name__ == "__main__":
@@ -129,32 +131,33 @@ if __name__ == "__main__":
     if not os.path.exists("../processed"):
         os.mkdir("../processed")
 
-    data_path = "millionsongsubset"
-
-    # 1 - 138.30 s
-    # 2 - 145.41 s
-    # 6 - 98.06 s
-    # 12 - 100.59 s
-    my_pool = multiprocessing.Pool(processes=1)
-    # my_process = multiprocessing.Process()
-    processed_count = 0
-    start = time.perf_counter()
+    data_path = "millionsongsubset/"
     dirs_1 = ['A', 'B']
-    dirs_2 = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
-    dirs_3 = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
-    for d_1 in dirs_1:
-        for d_2 in dirs_2:
-            for d_3 in dirs_3:
-                cur_path = os.path.join(data_path, d_1, d_2, d_3)
-                for _, _, filenames in os.walk(cur_path):
-                    for f_name in filenames:
-                        file_path = cur_path + "\\" + f_name
-                        my_pool.apply(process_h5_file_wrapper, args=(file_path, ))
-                        # process_h5_file_wrapper(file_path)
-                        processed_count += 1
-                        if processed_count % 100 == 0:
-                            print("\rProcessing %d/%d..." %
-                                  (processed_count, 10000), end="...")
-    wall_clock_time = time.perf_counter() - start
-    print("\nUsing time:", wall_clock_time, "seconds")
-    my_pool.close()
+    dirs_2 = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U',
+              'V', 'W', 'X', 'Y', 'Z']
+    dirs_3 = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U',
+              'V', 'W', 'X', 'Y', 'Z']
+
+    # test with different processes num
+    for i in [1, 2, 4, 6, 8, 10, 12]:
+        process_num = i
+        print("Process used:", process_num)
+        my_pool = multiprocessing.Pool(processes=process_num)
+        processed_count = 0
+        start = time.perf_counter()
+        for d_1 in dirs_1:
+            for d_2 in dirs_2:
+                for d_3 in dirs_3:
+                    cur_path = os.path.join(data_path, d_1, d_2, d_3)
+                    for _, _, filenames in os.walk(cur_path):
+                        for f_name in filenames:
+                            file_path = cur_path + "\\" + f_name
+                            # parallel perform processing
+                            my_pool.apply(process_h5_file_wrapper, args=(file_path, ))
+                            processed_count += 1
+                            if processed_count % 100 == 0:
+                                print("\rProcessing %d/%d..." %
+                                      (processed_count, 10000), end="...")
+        wall_clock_time = time.perf_counter() - start
+        print("\nUsing time:", wall_clock_time, "seconds")
+        my_pool.close()
