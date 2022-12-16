@@ -119,7 +119,7 @@ class MusicPopularityPredictor:
     def grid_search_for_XGBR(self, n_jobs=12):
         param_grid = {"n_estimators": [100, 200, 400],
                       "max_depth": [3, 6, 9]}
-        grid_search = GridSearchCV(RandomForestRegressor(n_jobs=n_jobs),
+        grid_search = GridSearchCV(XGBRegressor(n_jobs=n_jobs),
                                    param_grid=param_grid,
                                    return_train_score=True,
                                    cv=2,
