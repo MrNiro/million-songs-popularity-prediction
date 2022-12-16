@@ -3,7 +3,7 @@
 ## Preprocessing
 ```bash
 python src/data_processing.py
-python npl_features.csv
+python src/npl_features.csv
 ```
 
 ## Training
